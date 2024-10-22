@@ -1,20 +1,20 @@
 CC = gcc
-CFLAGS = -Wall -I./samples/common
+CFLAGS = -Wall -I./src/common
 LDFLAGS = -lglfw -lEGL -lGLESv2
 
-COMMON_SRC = samples/common/window.c
+COMMON_SRC = src/common/window.c
 
 .PHONY: all clean
 
 all: hello-world foo bar
 
-hello-world: samples/hello-world/main.c $(COMMON_SRC)
+hello-world: src/hello-world/main.c $(COMMON_SRC)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-foo: samples/foo/main.c $(COMMON_SRC)
+foo: src/foo/main.c $(COMMON_SRC)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-bar: samples/bar/main.c $(COMMON_SRC)
+bar: src/bar/main.c $(COMMON_SRC)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
