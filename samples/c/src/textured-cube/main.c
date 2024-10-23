@@ -10,7 +10,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <GLES3/gl3.h>
+#if defined(OPENGL_VERSION_33) || defined(OPENGL_VERSION_46)
+    #include <GL/gl.h>
+#elif defined(OPENGL_ES_VERSION_20)
+    #include <GLES2/gl2.h>
+#elif defined(OPENGL_ES_VERSION_32)
+    #include <GLES3/gl3.h>
+#else
+    #error "Unsupported OpenGL version."
+#endif
 #include <EGL/egl.h>
 #include <GLFW/glfw3.h>
 #include "matrix.h"

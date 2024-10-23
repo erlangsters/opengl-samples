@@ -9,12 +9,81 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
-#include <GLES3/gl3.h>
+#if defined(OPENGL_VERSION_33) || defined(OPENGL_VERSION_46)
+    #include <GL/gl.h>
+#elif defined(OPENGL_ES_VERSION_20)
+    #include <GLES2/gl2.h>
+#elif defined(OPENGL_ES_VERSION_32)
+    #include <GLES3/gl3.h>
+#else
+    #error "Unsupported OpenGL version."
+#endif
 #include <EGL/egl.h>
 #include <GLFW/glfw3.h>
 #include "window.h"
 
-const char* vertex_shader_src = R"(
+#if defined(OPENGL_VERSION_33)
+    const char* vertex_shader_src = R"(
+#version 330 core
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec3 aColor;
+out vec3 ourColor;
+void main() {
+    gl_Position = vec4(aPos, 1.0);
+    ourColor = aColor;
+}
+    )";
+
+    const char* fragment_shader_src = R"(
+#version 330 core
+in vec3 ourColor;
+out vec4 FragColor;
+void main() {
+    FragColor = vec4(ourColor, 1.0);
+}
+    )";
+#elif defined(OPENGL_VERSION_46)
+    const char* vertex_shader_src = R"(
+#version 460 core
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec3 aColor;
+out vec3 ourColor;
+void main() {
+    gl_Position = vec4(aPos, 1.0);
+    ourColor = aColor;
+}
+    )";
+
+    const char* fragment_shader_src = R"(
+#version 460 core
+in vec3 ourColor;
+out vec4 FragColor;
+void main() {
+    FragColor = vec4(ourColor, 1.0);
+}
+    )";
+#elif defined(OPENGL_ES_VERSION_20)
+    const char* vertex_shader_src = R"(
+#version 100
+attribute vec3 aPos;
+attribute vec3 aColor;
+varying vec3 ourColor;
+void main() {
+    gl_Position = vec4(aPos, 1.0);
+    ourColor = aColor;
+}
+    )";
+
+    const char* fragment_shader_src = R"(
+#version 100
+precision mediump float;
+varying vec3 ourColor;
+void main() {
+    gl_FragColor = vec4(ourColor, 1.0);
+}
+    )";
+#elif defined(OPENGL_ES_VERSION_32)
+    const char* vertex_shader_src = R"(
 #version 320 es
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aColor;
@@ -23,9 +92,9 @@ void main() {
     gl_Position = vec4(aPos, 1.0);
     ourColor = aColor;
 }
-)";
+    )";
 
-const char* fragment_shader_src = R"(
+    const char* fragment_shader_src = R"(
 #version 320 es
 precision mediump float;
 in vec3 ourColor;
@@ -33,7 +102,10 @@ out vec4 FragColor;
 void main() {
     FragColor = vec4(ourColor, 1.0);
 }
-)";
+    )";
+#else
+    #error "Unsupported OpenGL version."
+#endif
 
 GLfloat vertices[] = {
      0.0f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,
@@ -97,11 +169,20 @@ int main() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
+    GLint posAttrib = 0;
+    #if defined(OPENGL_VERSION_ES_20)
+        posAttrib = glGetAttribLocation(shader_program, "aPos");
+    #endif
+    glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(posAttrib);
+
     // Color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
+    GLint colorAttrib = 1;
+    #if defined(OPENGL_VERSION_ES_20)
+        colorAttrib = glGetAttribLocation(shader_program, "aColor");
+    #endif
+    glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(colorAttrib);
 
     glBindVertexArray(0); // Unbind VAO
 
