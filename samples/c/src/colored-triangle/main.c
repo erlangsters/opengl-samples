@@ -136,7 +136,9 @@ void check_program_link_status(GLuint program) {
 int main() {
     GLFWwindow* window;
     EGLDisplay display;
-    if (initializeWindow(&window, &display, 640, 480, "Erlangsters - Colored Triangle") != 0) {
+    EGLContext context;
+    EGLSurface surface;
+    if (initializeWindow(&window, &display, &context, &surface, 640, 480, "Erlangsters - Colored Triangle") != 0) {
         return -1;
     }
 
@@ -198,7 +200,7 @@ int main() {
         glBindVertexArray(0);
 
         // Swap front and back buffers
-        glfwSwapBuffers(window);
+        eglSwapBuffers(display, surface);
 
         // Poll for and process events
         glfwPollEvents();

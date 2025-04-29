@@ -16,6 +16,8 @@
 int initializeWindow(
     GLFWwindow** window,
     EGLDisplay* display,
+    EGLContext* context,
+    EGLSurface* surface,
     int width,
     int height,
     const char* title

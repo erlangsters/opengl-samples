@@ -67,7 +67,9 @@ void generateCheckerTexture(unsigned char* data, int width, int height,
 int main() {
     GLFWwindow* window;
     EGLDisplay display;
-    if (initializeWindow(&window, &display, 640, 480, "Erlangsters - Textured Cube") != 0) {
+    EGLContext context;
+    EGLSurface surface;
+    if (initializeWindow(&window, &display, &context, &surface, 640, 480, "Erlangsters - Textured Cube") != 0) {
         return -1;
     }
 
@@ -238,7 +240,7 @@ int main() {
 
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 
-        glfwSwapBuffers(window);
+        eglSwapBuffers(display, surface);
         glfwPollEvents();
     }
 
