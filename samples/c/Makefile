@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -I./src/common
 LDFLAGS = -lglfw -lEGL -lGLESv2
 
-COMMON_SRC = src/common/window.c
+COMMON_SRC = src/common/matrix.c src/common/window.c
 
 .PHONY: all clean
 
