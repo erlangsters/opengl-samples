@@ -19,25 +19,42 @@
 const char* vertexShaderSource =
     "precision mediump float;\n"
     "attribute vec3 vertPosition;\n"
-    "attribute vec3 vertColor;\n"
-    "varying vec3 fragColor;\n"
+    "attribute vec2 vertTexCoord;\n"
+    "varying vec2 fragTexCoord;\n"
     "uniform mat4 mWorld;\n"
     "uniform mat4 mView;\n"
     "uniform mat4 mProj;\n"
     "\n"
     "void main()\n"
     "{\n"
-    "    fragColor = vertColor;\n"
+    "    fragTexCoord = vertTexCoord;\n"
     "    gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);\n"
     "}\n";
 
 const char* fragmentShaderSource =
     "precision mediump float;\n"
-    "varying vec3 fragColor;\n"
+    "varying vec2 fragTexCoord;\n"
+    "uniform sampler2D texture;\n"
     "void main()\n"
     "{\n"
-    "    gl_FragColor = vec4(fragColor, 1.0);\n"
+    "    gl_FragColor = texture2D(texture, fragTexCoord);\n"
     "}\n";
+
+void generateCheckerTexture(unsigned char* data, int width, int height,
+                          unsigned char r1, unsigned char g1, unsigned char b1,
+                          unsigned char r2, unsigned char g2, unsigned char b2) {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int index = (y * width + x) * 4;
+            int isAlternate = (x / 2 + y / 2) % 2;
+
+            data[index + 0] = isAlternate ? r1 : r2;
+            data[index + 1] = isAlternate ? g1 : g2;
+            data[index + 2] = isAlternate ? b1 : b2;
+            data[index + 3] = 255;
+        }
+    }
+}
 
 int main() {
     GLFWwindow* window;
@@ -83,43 +100,42 @@ int main() {
     }
 
     float vertices[] = {
-        // Format: X, Y, Z, R, G, B
-
+        // Format: X, Y, Z, U, V
         // Top
-        -1.0,  1.0, -1.0,   0.5, 0.5, 0.5,
-        -1.0,  1.0,  1.0,   0.5, 0.5, 0.5,
-        1.0,  1.0,  1.0,   0.5, 0.5, 0.5,
-        1.0,  1.0, -1.0,   0.5, 0.5, 0.5,
+        -1.0f,  1.0f, -1.0f,   0.0f, 0.0f,
+        -1.0f,  1.0f,  1.0f,   0.0f, 1.0f,
+         1.0f,  1.0f,  1.0f,   1.0f, 1.0f,
+         1.0f,  1.0f, -1.0f,   1.0f, 0.0f,
 
         // Left
-        -1.0, 1.0, 1.0,    0.75, 0.25, 0.5,
-        -1.0, -1.0, 1.0,   0.75, 0.25, 0.5,
-        -1.0, -1.0, -1.0,  0.75, 0.25, 0.5,
-        -1.0, 1.0, -1.0,   0.75, 0.25, 0.5,
+        -1.0f,  1.0f,  1.0f,   0.0f, 0.0f,
+        -1.0f, -1.0f,  1.0f,   0.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,   1.0f, 1.0f,
+        -1.0f,  1.0f, -1.0f,   1.0f, 0.0f,
 
         // Right
-        1.0, 1.0, 1.0,    0.25, 0.25, 0.75,
-        1.0, -1.0, 1.0,   0.25, 0.25, 0.75,
-        1.0, -1.0, -1.0,  0.25, 0.25, 0.75,
-        1.0, 1.0, -1.0,   0.25, 0.25, 0.75,
+         1.0f,  1.0f,  1.0f,   0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f,   0.0f, 1.0f,
+         1.0f, -1.0f, -1.0f,   1.0f, 1.0f,
+         1.0f,  1.0f, -1.0f,   1.0f, 0.0f,
 
         // Front
-        1.0, 1.0, 1.0,    1.0, 0.0, 0.15,
-        1.0, -1.0, 1.0,    1.0, 0.0, 0.15,
-        -1.0, -1.0, 1.0,    1.0, 0.0, 0.15,
-        -1.0, 1.0, 1.0,    1.0, 0.0, 0.15,
+         1.0f,  1.0f,  1.0f,   0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f,   0.0f, 1.0f,
+        -1.0f, -1.0f,  1.0f,   1.0f, 1.0f,
+        -1.0f,  1.0f,  1.0f,   1.0f, 0.0f,
 
         // Back
-        1.0, 1.0, -1.0,    0.0, 1.0, 0.15,
-        1.0, -1.0, -1.0,    0.0, 1.0, 0.15,
-        -1.0, -1.0, -1.0,    0.0, 1.0, 0.15,
-        -1.0, 1.0, -1.0,    0.0, 1.0, 0.15,
+         1.0f,  1.0f, -1.0f,   0.0f, 0.0f,
+         1.0f, -1.0f, -1.0f,   0.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,   1.0f, 1.0f,
+        -1.0f,  1.0f, -1.0f,   1.0f, 0.0f,
 
         // Bottom
-        -1.0, -1.0, -1.0,   0.5, 0.5, 1.0,
-        -1.0, -1.0, 1.0,    0.5, 0.5, 1.0,
-        1.0, -1.0, 1.0,     0.5, 0.5, 1.0,
-        1.0, -1.0, -1.0,    0.5, 0.5, 1.0
+        -1.0f, -1.0f, -1.0f,   0.0f, 0.0f,
+        -1.0f, -1.0f,  1.0f,   0.0f, 1.0f,
+         1.0f, -1.0f,  1.0f,   1.0f, 1.0f,
+         1.0f, -1.0f, -1.0f,   1.0f, 0.0f
     };
 
     unsigned short indices[] = {
@@ -141,14 +157,30 @@ int main() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    GLint posAttrib = glGetAttribLocation(shaderProgram, "vertPosition");
-    GLint colAttrib = glGetAttribLocation(shaderProgram, "vertColor");
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
 
-    glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0);
-    glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    const int texWidth = 16;
+    const int texHeight = 16;
+    unsigned char textureData[texWidth * texHeight * 4];
+    generateCheckerTexture(textureData, texWidth, texHeight, 255, 0, 0, 128, 0, 0);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texWidth, texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    GLint posAttrib = glGetAttribLocation(shaderProgram, "vertPosition");
+    GLint texCoordAttrib = glGetAttribLocation(shaderProgram, "vertTexCoord");
+
+    glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+    glVertexAttribPointer(texCoordAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
     glEnableVertexAttribArray(posAttrib);
-    glEnableVertexAttribArray(colAttrib);
+    glEnableVertexAttribArray(texCoordAttrib);
 
     GLint worldUniform = glGetUniformLocation(shaderProgram, "mWorld");
     GLint viewUniform = glGetUniformLocation(shaderProgram, "mView");
@@ -202,6 +234,7 @@ int main() {
         glfwPollEvents();
     }
 
+    glDeleteTextures(1, &texture);
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
     glDeleteProgram(shaderProgram);
@@ -209,5 +242,6 @@ int main() {
     glDeleteBuffers(1, &EBO);
 
     terminateWindow(window);
+
     return 0;
 }
