@@ -64,7 +64,7 @@ void check_program_link_status(GLuint program) {
 int main() {
     GLFWwindow* window;
     EGLDisplay display;
-    if (initializeWindow(&window, &display, 640, 480, "OpenGL Samples - Hello world") != 0) {
+    if (initializeWindow(&window, &display, 640, 480, "Erlangsters - Colored Triangle") != 0) {
         return -1;
     }
 

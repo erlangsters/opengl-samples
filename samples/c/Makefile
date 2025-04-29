@@ -6,9 +6,9 @@ COMMON_SRC = src/common/window.c
 
 .PHONY: all clean
 
-all: hello-world foo bar
+all: colored-triangle foo bar
 
-hello-world: src/hello-world/main.c $(COMMON_SRC)
+colored-triangle: src/colored-triangle/main.c $(COMMON_SRC)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 foo: src/foo/main.c $(COMMON_SRC)
@@ -18,4 +18,4 @@ bar: src/bar/main.c $(COMMON_SRC)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
-	rm -f hello-world foo bar
+	rm -f colored-triangle foo bar
