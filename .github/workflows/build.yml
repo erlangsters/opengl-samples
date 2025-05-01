@@ -1,0 +1,34 @@
+# Unfortunately, we are only able to test if the samples compile fine. No
+# guarantee they produce the expected graphics output.
+name: build
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  ubuntu:
+    strategy:
+      # No fail fast, so we can see all the results.
+      fail-fast: false
+      matrix:
+        version:
+          - opengl-3.3
+          - opengl-4.6
+          - opengl-es-2.0
+          - opengl-es-3.2
+        sample:
+          - colored-triangle
+          - textured-cube
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: sudo apt-get install -y libegl-dev libglfw3-dev
+    - if: "!contains(matrix.version, 'es')"
+      run: sudo apt-get install -y libgl-dev
+    - if: "contains(matrix.version, 'es')"
+      run: sudo apt-get install -y libgles-dev
+    - run: |
+        cd samples/c
+        OPENGL_VERSION=${{ matrix.version }} make ${{ matrix.sample }}
