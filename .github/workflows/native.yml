@@ -33,3 +33,20 @@ jobs:
     - run: |
         cd samples/native
         OPENGL_VERSION=${{ matrix.version }} make ${{ matrix.sample }}
+
+  macos:
+    strategy:
+      # No fail fast, so we can see all the results.
+      fail-fast: false
+      matrix:
+        version:
+          - opengl-es-3.1
+        sample:
+          - colored-triangle
+          - textured-cube
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: |
+        cd samples/native
+        OPENGL_VERSION=${{ matrix.version }} make ${{ matrix.sample }}
