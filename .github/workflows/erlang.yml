@@ -35,3 +35,20 @@ jobs:
     - run: |
         cd samples/erlang
         rebar3 as ${{ matrix.version }} compile
+
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - opengl-es-3.1
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: erlangsters/setup-erlang@v1
+      with:
+        erlang-version: 28
+        install-rebar3: true
+    - run: |
+        cd samples/erlang
+        rebar3 as ${{ matrix.version }} compile
