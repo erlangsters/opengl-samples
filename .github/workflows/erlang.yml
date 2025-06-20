@@ -1,0 +1,37 @@
+# To be written.
+name: erlang
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  ubuntu:
+    strategy:
+      # No fail fast, so we can see all the results.
+      fail-fast: false
+      matrix:
+        version:
+          - opengl-3.3
+          - opengl-4.1
+          - opengl-4.6
+          - opengl-es-2.0
+          - opengl-es-3.0
+          - opengl-es-3.1
+          - opengl-es-3.2
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: sudo apt-get install -y libegl-dev libglfw3-dev
+    - if: "!contains(matrix.version, 'es')"
+      run: sudo apt-get install -y libgl-dev
+    - if: "contains(matrix.version, 'es')"
+      run: sudo apt-get install -y libgles-dev
+    - uses: erlangsters/setup-erlang@v1
+      with:
+        erlang-version: 28
+        install-rebar3: true
+    - run: |
+        cd samples/erlang
+        rebar3 as ${{ matrix.version }} compile
