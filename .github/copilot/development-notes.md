@@ -1,0 +1,6 @@
+# Development notes
+
+- `samples/native/src/common/window.c`: The `EGL_KHR_create_context` check is kept for OpenGL ES 3.x targets because the samples request explicit context major and minor versions through EGL. On Linux drivers, that request is typically guarded by the `EGL_KHR_create_context` extension. Without it, the code can silently fall back to a lower context capability or fail later in a less obvious way.
+- `samples/native/src/common/gl_api.h`: The `GL_GLEXT_PROTOTYPES` path is kept for desktop OpenGL targets because the Linux desktop GL headers do not reliably expose modern core-function prototypes by default. Defining it before including `GL/glext.h` gives the C samples direct declarations for functions such as shader, buffer, and vertex-array entry points without introducing a separate loader library.
+- `samples/native/src/common/window.c`: The current native window surface path uses `glfwGetX11Window()` and is therefore Linux/X11-specific. Any macOS or Windows extension needs a platform-specific native window handle path rather than a documentation-only change.
+- `.github/workflows/native.yml`: Keep the Linux package installation split by target API version. Desktop GL and OpenGL ES should continue to install different packages so the workflow documents the dependency boundary instead of hiding it in a catch-all package set.
