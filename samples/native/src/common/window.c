@@ -7,11 +7,20 @@
 //
 // Written by Jonathan De Wachter <jonathan.dewachter@byteplug.io>
 //
+#define GLFW_EXPOSE_NATIVE_X11
+#include <string.h>
+#include "gl_api.h"
 #include "window.h"
+#include <GLFW/glfw3native.h>
 #include <stdio.h>
+
+#ifndef EGL_OPENGL_ES3_BIT
+    #define EGL_OPENGL_ES3_BIT EGL_OPENGL_ES3_BIT_KHR
+#endif
 
 void window_size_callback(GLFWwindow* window, int width, int height)
 {
+    (void)window;
     glViewport(0, 0, width, height);
 }
 
@@ -23,6 +32,7 @@ int initializeWindow(
     int width, int height,
     const char* title
 ) {
+    // Initialize EGL.
     *display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (*display == EGL_NO_DISPLAY) {
         fprintf(stderr, "Failed to get EGL display\n");
@@ -36,32 +46,23 @@ int initializeWindow(
         return -1;
     }
 
-    EGLint renderableType;
-    EGLint versionMajor;
-    EGLint versionMinor;
-#if defined(OPENGL_VERSION_33)
-    renderableType = EGL_OPENGL_BIT;
-    versionMajor = 3;
-    versionMinor = 3;
-    eglBindAPI(EGL_OPENGL_API);
-#elif defined(OPENGL_VERSION_46)
-    renderableType = EGL_OPENGL_BIT;
-    versionMajor = 4;
-    versionMinor = 6;
-    eglBindAPI(EGL_OPENGL_API);
-#elif defined(OPENGL_ES_VERSION_20)
-    renderableType = EGL_OPENGL_ES2_BIT;
-    versionMajor = 2;
-    versionMinor = 0;
-    eglBindAPI(EGL_OPENGL_ES_API);
-#elif defined(OPENGL_ES_VERSION_32)
-    renderableType = EGL_OPENGL_ES2_BIT;
-    versionMajor = 3;
-    versionMinor = 2;
-    eglBindAPI(EGL_OPENGL_ES_API);
-#else
-    #error "Unsupported OpenGL version."
-#endif
+    // Set the rendering API.
+    #if SAMPLE_OPENGL_API == SAMPLE_API_GL
+        eglBindAPI(EGL_OPENGL_API);
+    #elif SAMPLE_OPENGL_API == SAMPLE_API_GLES
+        eglBindAPI(EGL_OPENGL_ES_API);
+    #else
+        #error "Unsupported OpenGL version."
+    #endif
+
+    // Choose an EGL config.
+    #if SAMPLE_OPENGL_API == SAMPLE_API_GL
+        EGLint renderableType = EGL_OPENGL_BIT;
+    #elif SAMPLE_OPENGL_VERSION_MAJOR == 2
+        EGLint renderableType = EGL_OPENGL_ES2_BIT;
+    #else
+        EGLint renderableType = EGL_OPENGL_ES2_BIT | EGL_OPENGL_ES3_BIT;
+    #endif
 
     EGLint configAttribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -73,56 +74,78 @@ int initializeWindow(
     if (!eglChooseConfig(*display, configAttribs, &config, 1, &numConfigs) || numConfigs < 1) {
         fprintf(stderr, "Failed to choose EGL config\n");
         eglTerminate(*display);
-        glfwTerminate();
         return -1;
     }
 
+    // Create an EGL context.
     EGLint contextAttribs[] = {
-        EGL_CONTEXT_MAJOR_VERSION, versionMajor,
-        EGL_CONTEXT_MINOR_VERSION, versionMinor,
+        EGL_CONTEXT_MAJOR_VERSION, SAMPLE_OPENGL_VERSION_MAJOR,
+        EGL_CONTEXT_MINOR_VERSION, SAMPLE_OPENGL_VERSION_MINOR,
         EGL_NONE
     };
     *context = eglCreateContext(*display, config, EGL_NO_CONTEXT, contextAttribs);
     if (*context == EGL_NO_CONTEXT) {
         fprintf(stderr, "Failed to create EGL context\n");
         eglTerminate(*display);
-        glfwTerminate();
         return -1;
     }
 
+    // Initialize GLFW.
     if (!glfwInit()) {
         fprintf(stderr, "Failed to initialize GLFW\n");
         return -1;
     }
 
+    // Create a GLFW window (without OpenGL context).
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     *window = glfwCreateWindow(width, height, title, NULL, NULL);
     if (!*window) {
         fprintf(stderr, "Failed to create GLFW window\n");
         glfwTerminate();
+        eglDestroyContext(*display, *context);
+        eglTerminate(*display);
         return -1;
     }
 
+    // Requesting an explicit GLES 3.x context through EGL depends on
+    // EGL_KHR_create_context on the Linux drivers we target today.
+    if (SAMPLE_OPENGL_API == SAMPLE_API_GLES && SAMPLE_OPENGL_VERSION_MAJOR >= 3) {
+        const char* egl_extensions = eglQueryString(*display, EGL_EXTENSIONS);
+        if (!egl_extensions || strstr(egl_extensions, "EGL_KHR_create_context") == NULL) {
+            fprintf(stderr, "EGL_KHR_create_context is required for OpenGL ES 3.x contexts\n");
+            glfwDestroyWindow(*window);
+            glfwTerminate();
+            eglDestroyContext(*display, *context);
+            eglTerminate(*display);
+            return -1;
+        }
+    }
+
+    // Set the GLFW window size callback to adjust the OpenGL viewport.
     glfwSetWindowSizeCallback(*window, window_size_callback);
 
     *surface = eglCreateWindowSurface(*display, config, (EGLNativeWindowType)glfwGetX11Window(*window), NULL);
     if (*surface == EGL_NO_SURFACE) {
         fprintf(stderr, "Failed to create EGL surface\n");
+        glfwDestroyWindow(*window);
+        glfwTerminate();
         eglDestroyContext(*display, *context);
         eglTerminate(*display);
-        glfwTerminate();
         return -1;
     }
 
+    // Make the EGL context current.
     if (!eglMakeCurrent(*display, *surface, *surface, *context)) {
         fprintf(stderr, "Failed to make EGL context current\n");
         eglDestroySurface(*display, *surface);
+        glfwDestroyWindow(*window);
+        glfwTerminate();
         eglDestroyContext(*display, *context);
         eglTerminate(*display);
-        glfwTerminate();
         return -1;
     }
 
+    // Display the OpenGL version and EGL version.
     const char* egl_version = eglQueryString(*display, EGL_VERSION);
     printf("EGL Version: %s\n", egl_version);
 

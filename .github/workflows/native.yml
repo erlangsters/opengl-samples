@@ -4,49 +4,49 @@ on:
   push:
     branches:
       - master
+    paths:
+      - .github/workflows/native.yml
+      - samples/native/**
+  pull_request:
+    paths:
+      - .github/workflows/native.yml
+      - samples/native/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   ubuntu:
-    strategy:
-      # No fail fast, so we can see all the results.
-      fail-fast: false
-      matrix:
-        version:
-          - opengl-3.3
-          - opengl-4.1
-          - opengl-4.6
-          - opengl-es-2.0
-          - opengl-es-3.0
-          - opengl-es-3.1
-          - opengl-es-3.2
-        sample:
-          - colored-triangle
-          - textured-cube
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - run: sudo apt-get install -y libegl-dev libglfw3-dev
-    - if: "!contains(matrix.version, 'es')"
-      run: sudo apt-get install -y libgl-dev
-    - if: "contains(matrix.version, 'es')"
-      run: sudo apt-get install -y libgles-dev
-    - run: |
-        cd samples/native
-        OPENGL_VERSION=${{ matrix.version }} make ${{ matrix.sample }}
-
-  macos:
     strategy:
-      # No fail fast, so we can see all the results.
       fail-fast: false
       matrix:
-        version:
-          - opengl-es-3.1
-        sample:
-          - colored-triangle
-          - textured-cube
-    runs-on: macos-latest
+        include:
+          - version: opengl-3.3
+            target: opengl_33
+          - version: opengl-4.1
+            target: opengl_41
+          - version: opengl-4.6
+            target: opengl_46
+          - version: opengl-es-2.0
+            target: opengl_es_20
+          - version: opengl-es-3.0
+            target: opengl_es_30
+          - version: opengl-es-3.1
+            target: opengl_es_31
+          - version: opengl-es-3.2
+            target: opengl_es_32
     steps:
-    - uses: actions/checkout@v4
-    - run: |
-        cd samples/native
-        OPENGL_VERSION=${{ matrix.version }} make ${{ matrix.sample }}
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y cmake libegl-dev libglfw3-dev
+      - if: "!contains(matrix.version, 'es')"
+        run: sudo apt-get install -y libgl-dev
+      - if: "contains(matrix.version, 'es')"
+        run: sudo apt-get install -y libgles-dev
+      - run: cmake -S samples/native -B samples/native/build
+      - run: cmake --build samples/native/build --target ${{ matrix.target }} --parallel

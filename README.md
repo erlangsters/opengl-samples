@@ -1,30 +1,57 @@
-# OpenGL Samples (C & Erlang)
+# OpenGL Samples (Erlang & Elixir)
 
-:construction: It's still in development.
+> :construction: It's a work-in-progress. Notably, the Elixir examples are not
+> implemented yet.
 
 [![Erlangsters Repository](https://img.shields.io/badge/erlangsters-opengl--samples-%23a90432)](https://github.com/erlangsters/opengl-samples)
 ![Supported Erlang/OTP Versions](https://img.shields.io/badge/erlang%2Fotp-28-%23a90432)
 ![License](https://img.shields.io/github/license/erlangsters/glfw)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/erlangsters/glfw/workflow.yml)](https://github.com/erlangsters/glfw/actions/workflows/workflow.yml)
 
-This repository contains little OpenGL programs written in C with their
+This repository contains simple OpenGL programs written in C with their
 counter-part written in Erlang and Elixir. They can be used as reference to
 write applications that use the the OpenGL
 [bindings](https://github.com/orgs/erlangsters/repositories?q=opengl-), and
 implicitly, the EGL [binding](https://github.com/erlangsters/egl-1.5). Note
-that they use GLFW for the windowing aspect.
+that they use GLFW to display the graphics in a window.
 
 The available samples are the following.
 
 - `colored-triangle` - Shows a basic colored triangle.
 - `textured-cube` - Shows a rotating textured cube.
 
-Each sample is written to work with OpenGL 3.3, OpenGL 4.6, OpenGL ES 2.0 and
-OpenGL ES 3.2 (when possible). Note that OpenGL 4.6 on macOS is not available
-and ANGLE was used for OpenGL ES on both macOS and Windows.
+Each sample is written to work with all OpenGL and OpenGL ES versions that are
+made available to Erlang and Elixir.
+
+- OpenGL: [3.3](https://github.com/erlangsters/opengl-3.3) |
+  [4.1](https://github.com/erlangsters/opengl-4.1) |
+  [4.6](https://github.com/erlangsters/opengl-4.6)
+- OpenGL ES: [2.0](https://github.com/erlangsters/opengl-es-2.0) |
+  [3.0](https://github.com/erlangsters/opengl-es-3.0) |
+  [3.1](https://github.com/erlangsters/opengl-es-3.1) |
+  [3.2](https://github.com/erlangsters/opengl-es-3.2)
+
+Note on macOS and Windows, the samples are only tested using OpenGL ES 3.1
+using the ANGLE layer. However, they should work equally well without ANGLE 
+and/or with other OpenGL versions (providing you know the platform-specific 
+limitations of OpenGL).
 
 ## OpenGL availability
 
+All versions of OpenGL and OpenGL ES are available on Linux, and work is primarily
+tested on this platform.
+
+However, the **macOS** and **Windows** platforms have limitations.
+
+**macOS**
+
+**Windows**
+
+It's the driver that implements OpenGL and OpenGL ES.
+However, for simplicity, simply use
+
+
+All OpenGL versions are thouroughly tested on Linux
 - talk about libangle and how it enable OpenGL ES on macOS and Windows (it also
   provides EGL).
 
@@ -32,22 +59,53 @@ and ANGLE was used for OpenGL ES on both macOS and Windows.
 
 ## Compile and run C samples
 
-Samples can only be compiled for one OpenGL version at a time. Therefore, first
-set the `OPENGL_VERSION` environment variable to one of the following values.
+The native samples now use CMake and, for the moment, this build is supported on Linux only.
 
-- `opengl-3.0`
-- `opengl-4.6`
-- `opengl-es-2.0`
-- `opengl-es-3.2`
+Instead of reconfiguring the same build tree with an environment variable, CMake exposes one target per OpenGL version and one executable target per sample/version pair.
 
-Then head to the `samples/c` folder and run `make`. All samples should be
-compiled.
+The version group targets are.
 
-Run them individually. For instance `./hello-world`.
+- `opengl_33`
+- `opengl_41`
+- `opengl_46`
+- `opengl_es_20`
+- `opengl_es_30`
+- `opengl_es_31`
+- `opengl_es_32`
+
+Configure the project once, then build the version you want.
+
+```
+cmake -S samples/native -B samples/native/build
+cmake --build samples/native/build --target opengl_es_31
+```
+
+This produces both native samples for OpenGL ES 3.1 in the build directory.
+
+If you want a single executable, build its sample-specific target. For instance, to build only the `colored-triangle` sample for OpenGL 4.6:
+
+```
+cmake --build samples/native/build --target colored_triangle_opengl_4_6
+./samples/native/build/colored-triangle-opengl-4.6
+```
 
 ## Compile and run Erlang samples
 
-Samples can only be compiled for one OpenGL version at a time. Therefore, first
+Samples can only be compiled for one OpenGL version at a time. However, unlike
+the C samples, all samples are compiled at the same time with a single command.
+
+```
+rebar3 as opengl_es_2.0 compile
+```
+
+To run a specific sample, use.
+
+```
+rebar3 as opengl_es_2.0 shell --eval 'colored_triangle:run().'
+```
+
+
+Therefore, first
 set the `OPENGL_VERSION` environment variable to one of the following values.
 
 - `opengl-3.0`
@@ -59,6 +117,10 @@ Then head to the `samples/erlang` folder and run `make`. All samples should be
 compiled.
 
 Run them individually. For instance `./hello-world`.
+
+## Compile and run Elixir samples
+
+XXX: Not implemented yet.
 
 ## Available samples
 
@@ -137,7 +199,6 @@ CFLAGS = -Wall -Wextra -I/usr/include
 LDFLAGS = -lglfw -lGLEW -lGL
 
 ```
-
 
 ## Project origin
 

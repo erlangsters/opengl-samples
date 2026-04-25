@@ -80,7 +80,6 @@ void mat4_rotate_y(mat4 result, const mat4 m, float angle) {
     float c = cosf(angle);
 
     float m0 = m[0], m2 = m[2], m8 = m[8], m10 = m[10];
-    float m4 = m[4], m6 = m[6], m12 = m[12], m14 = m[14];
 
     result[0] = c * m0 - s * m2;
     result[2] = s * m0 + c * m2;
@@ -100,7 +99,7 @@ void mat4_rotate_x(mat4 result, const mat4 m, float angle) {
     float c = cosf(angle);
 
     float m1 = m[1], m2 = m[2], m5 = m[5], m6 = m[6];
-    float m9 = m[9], m10 = m[10], m13 = m[13], m14 = m[14];
+    float m9 = m[9], m10 = m[10];
 
     result[1] = c * m1 + s * m2;
     result[2] = -s * m1 + c * m2;

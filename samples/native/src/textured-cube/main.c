@@ -10,29 +10,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#if defined(OPENGL_VERSION_33) || defined(OPENGL_VERSION_46)
-    #include <GL/gl.h>
-#elif defined(OPENGL_ES_VERSION_20)
-    #include <GLES2/gl2.h>
-#elif defined(OPENGL_ES_VERSION_32)
-    #include <GLES3/gl3.h>
-#else
-    #error "Unsupported OpenGL version."
-#endif
-#include <EGL/egl.h>
-#include <GLFW/glfw3.h>
+#include "gl_api.h"
 #include "matrix.h"
 #include "window.h"
 
+#if defined(OPENGL_VERSION_33)
 const char* vertexShaderSource =
-    "precision mediump float;\n"
-    "attribute vec3 vertPosition;\n"
-    "attribute vec2 vertTexCoord;\n"
-    "varying vec2 fragTexCoord;\n"
+    "#version 330 core\n"
+    "layout(location = 0) in vec3 vertPosition;\n"
+    "layout(location = 1) in vec2 vertTexCoord;\n"
+    "out vec2 fragTexCoord;\n"
     "uniform mat4 mWorld;\n"
     "uniform mat4 mView;\n"
     "uniform mat4 mProj;\n"
-    "\n"
     "void main()\n"
     "{\n"
     "    fragTexCoord = vertTexCoord;\n"
@@ -40,13 +30,167 @@ const char* vertexShaderSource =
     "}\n";
 
 const char* fragmentShaderSource =
-    "precision mediump float;\n"
-    "varying vec2 fragTexCoord;\n"
-    "uniform sampler2D texture;\n"
+    "#version 330 core\n"
+    "in vec2 fragTexCoord;\n"
+    "out vec4 FragColor;\n"
+    "uniform sampler2D texture0;\n"
     "void main()\n"
     "{\n"
-    "    gl_FragColor = texture2D(texture, fragTexCoord);\n"
+    "    FragColor = texture(texture0, fragTexCoord);\n"
     "}\n";
+#elif defined(OPENGL_VERSION_41)
+const char* vertexShaderSource =
+    "#version 410 core\n"
+    "layout(location = 0) in vec3 vertPosition;\n"
+    "layout(location = 1) in vec2 vertTexCoord;\n"
+    "out vec2 fragTexCoord;\n"
+    "uniform mat4 mWorld;\n"
+    "uniform mat4 mView;\n"
+    "uniform mat4 mProj;\n"
+    "void main()\n"
+    "{\n"
+    "    fragTexCoord = vertTexCoord;\n"
+    "    gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);\n"
+    "}\n";
+
+const char* fragmentShaderSource =
+    "#version 410 core\n"
+    "in vec2 fragTexCoord;\n"
+    "out vec4 FragColor;\n"
+    "uniform sampler2D texture0;\n"
+    "void main()\n"
+    "{\n"
+    "    FragColor = texture(texture0, fragTexCoord);\n"
+    "}\n";
+#elif defined(OPENGL_VERSION_46)
+const char* vertexShaderSource =
+    "#version 460 core\n"
+    "layout(location = 0) in vec3 vertPosition;\n"
+    "layout(location = 1) in vec2 vertTexCoord;\n"
+    "out vec2 fragTexCoord;\n"
+    "uniform mat4 mWorld;\n"
+    "uniform mat4 mView;\n"
+    "uniform mat4 mProj;\n"
+    "void main()\n"
+    "{\n"
+    "    fragTexCoord = vertTexCoord;\n"
+    "    gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);\n"
+    "}\n";
+
+const char* fragmentShaderSource =
+    "#version 460 core\n"
+    "in vec2 fragTexCoord;\n"
+    "out vec4 FragColor;\n"
+    "uniform sampler2D texture0;\n"
+    "void main()\n"
+    "{\n"
+    "    FragColor = texture(texture0, fragTexCoord);\n"
+    "}\n";
+#elif defined(OPENGL_ES_VERSION_20)
+const char* vertexShaderSource =
+    "#version 100\n"
+    "attribute vec3 vertPosition;\n"
+    "attribute vec2 vertTexCoord;\n"
+    "varying vec2 fragTexCoord;\n"
+    "uniform mat4 mWorld;\n"
+    "uniform mat4 mView;\n"
+    "uniform mat4 mProj;\n"
+    "void main()\n"
+    "{\n"
+    "    fragTexCoord = vertTexCoord;\n"
+    "    gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);\n"
+    "}\n";
+
+const char* fragmentShaderSource =
+    "#version 100\n"
+    "precision mediump float;\n"
+    "varying vec2 fragTexCoord;\n"
+    "uniform sampler2D texture0;\n"
+    "void main()\n"
+    "{\n"
+    "    gl_FragColor = texture2D(texture0, fragTexCoord);\n"
+    "}\n";
+#elif defined(OPENGL_ES_VERSION_30)
+const char* vertexShaderSource =
+    "#version 300 es\n"
+    "precision mediump float;\n"
+    "layout(location = 0) in vec3 vertPosition;\n"
+    "layout(location = 1) in vec2 vertTexCoord;\n"
+    "out vec2 fragTexCoord;\n"
+    "uniform mat4 mWorld;\n"
+    "uniform mat4 mView;\n"
+    "uniform mat4 mProj;\n"
+    "void main()\n"
+    "{\n"
+    "    fragTexCoord = vertTexCoord;\n"
+    "    gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);\n"
+    "}\n";
+
+const char* fragmentShaderSource =
+    "#version 300 es\n"
+    "precision mediump float;\n"
+    "in vec2 fragTexCoord;\n"
+    "out vec4 FragColor;\n"
+    "uniform sampler2D texture0;\n"
+    "void main()\n"
+    "{\n"
+    "    FragColor = texture(texture0, fragTexCoord);\n"
+    "}\n";
+#elif defined(OPENGL_ES_VERSION_31)
+const char* vertexShaderSource =
+    "#version 310 es\n"
+    "precision mediump float;\n"
+    "layout(location = 0) in vec3 vertPosition;\n"
+    "layout(location = 1) in vec2 vertTexCoord;\n"
+    "out vec2 fragTexCoord;\n"
+    "uniform mat4 mWorld;\n"
+    "uniform mat4 mView;\n"
+    "uniform mat4 mProj;\n"
+    "void main()\n"
+    "{\n"
+    "    fragTexCoord = vertTexCoord;\n"
+    "    gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);\n"
+    "}\n";
+
+const char* fragmentShaderSource =
+    "#version 310 es\n"
+    "precision mediump float;\n"
+    "in vec2 fragTexCoord;\n"
+    "out vec4 FragColor;\n"
+    "uniform sampler2D texture0;\n"
+    "void main()\n"
+    "{\n"
+    "    FragColor = texture(texture0, fragTexCoord);\n"
+    "}\n";
+#elif defined(OPENGL_ES_VERSION_32)
+const char* vertexShaderSource =
+    "#version 320 es\n"
+    "precision mediump float;\n"
+    "layout(location = 0) in vec3 vertPosition;\n"
+    "layout(location = 1) in vec2 vertTexCoord;\n"
+    "out vec2 fragTexCoord;\n"
+    "uniform mat4 mWorld;\n"
+    "uniform mat4 mView;\n"
+    "uniform mat4 mProj;\n"
+    "void main()\n"
+    "{\n"
+    "    fragTexCoord = vertTexCoord;\n"
+    "    gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);\n"
+    "}\n";
+
+const char* fragmentShaderSource =
+    "#version 320 es\n"
+    "precision mediump float;\n"
+    "in vec2 fragTexCoord;\n"
+    "out vec4 FragColor;\n"
+    "uniform sampler2D texture0;\n"
+    "void main()\n"
+    "{\n"
+    "    FragColor = texture(texture0, fragTexCoord);\n"
+    "}\n";
+#else
+    #error "Unsupported OpenGL version."
+#endif
 
 void generateCheckerTexture(unsigned char* data, int width, int height,
                           unsigned char r1, unsigned char g1, unsigned char b1,
@@ -65,6 +209,7 @@ void generateCheckerTexture(unsigned char* data, int width, int height,
 }
 
 int main() {
+    const float pi = 3.14159265358979323846f;
     GLFWwindow* window;
     EGLDisplay display;
     EGLContext context;
@@ -183,8 +328,12 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    GLint posAttrib = glGetAttribLocation(shaderProgram, "vertPosition");
-    GLint texCoordAttrib = glGetAttribLocation(shaderProgram, "vertTexCoord");
+    GLint posAttrib = 0;
+    GLint texCoordAttrib = 1;
+    #if defined(OPENGL_ES_VERSION_20)
+        posAttrib = glGetAttribLocation(shaderProgram, "vertPosition");
+        texCoordAttrib = glGetAttribLocation(shaderProgram, "vertTexCoord");
+    #endif
 
     glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
     glVertexAttribPointer(texCoordAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
@@ -195,9 +344,10 @@ int main() {
     GLint worldUniform = glGetUniformLocation(shaderProgram, "mWorld");
     GLint viewUniform = glGetUniformLocation(shaderProgram, "mView");
     GLint projUniform = glGetUniformLocation(shaderProgram, "mProj");
+    GLint textureUniform = glGetUniformLocation(shaderProgram, "texture0");
 
     mat4 world, view, proj;
-    mat4 rotatedY, rotatedX;
+    mat4 rotatedY;
 
     mat4_identity(world);
     mat4_look_at(view,
@@ -207,7 +357,7 @@ int main() {
     );
 
     mat4_perspective(proj,
-        45.0f * M_PI / 180.0f,
+        45.0f * pi / 180.0f,
         640.0f / 480.0f,
         0.1f,
         1000.0f
@@ -219,12 +369,12 @@ int main() {
     glCullFace(GL_BACK);
 
     glUseProgram(shaderProgram);
+    glUniform1i(textureUniform, 0);
 
     glUniformMatrix4fv(worldUniform, 1, GL_FALSE, (float*)world);
     glUniformMatrix4fv(viewUniform, 1, GL_FALSE, (float*)view);
     glUniformMatrix4fv(projUniform, 1, GL_FALSE, (float*)proj);
 
-    double lastTime = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
         double currentTime = glfwGetTime();
         float angle = (float)currentTime;
