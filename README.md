@@ -31,10 +31,9 @@ made available to Erlang and Elixir.
   [3.1](https://github.com/erlangsters/opengl-es-3.1) |
   [3.2](https://github.com/erlangsters/opengl-es-3.2)
 
-Note on macOS and Windows, the samples are only tested using OpenGL ES 3.1
-using the ANGLE layer. However, they should work equally well without ANGLE 
-and/or with other OpenGL versions (providing you know the platform-specific 
-limitations of OpenGL).
+On macOS and Windows, the native samples currently target OpenGL ES 3.1
+through the ANGLE layer. Linux remains the platform where the wider desktop
+OpenGL and OpenGL ES matrix is compiled and exercised.
 
 ## OpenGL availability
 
@@ -43,23 +42,16 @@ tested on this platform.
 
 However, the **macOS** and **Windows** platforms have limitations.
 
-**macOS**
+On both platforms, the current native sample build uses ANGLE to provide EGL and
+an OpenGL ES implementation on top of the host system. That keeps the sample
+layer aligned with the EGL-first architecture used by the bindings.
 
-**Windows**
-
-It's the driver that implements OpenGL and OpenGL ES.
-However, for simplicity, simply use
-
-
-All OpenGL versions are thouroughly tested on Linux
-- talk about libangle and how it enable OpenGL ES on macOS and Windows (it also
-  provides EGL).
-
-- talk about availability of OpenGL on macOS and Windows.
+With that said, Linux is still the broadest verification platform. The macOS and
+Windows jobs currently build the OpenGL ES 3.1 samples only.
 
 ## Compile and run C samples
 
-The native samples now use CMake and, for the moment, this build is supported on Linux only.
+The native samples now use CMake.
 
 Instead of reconfiguring the same build tree with an environment variable, CMake exposes one target per OpenGL version and one executable target per sample/version pair.
 
@@ -88,6 +80,19 @@ If you want a single executable, build its sample-specific target. For instance,
 cmake --build samples/native/build --target colored_triangle_opengl_4_6
 ./samples/native/build/colored-triangle-opengl-4.6
 ```
+
+On macOS and Windows, configure the native samples with ANGLE and the vcpkg
+toolchain, then build the `opengl_es_31` target.
+
+```sh
+cmake -S samples/native -B samples/native/build \
+  -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
+  -DANGLE_INCLUDE_DIR="$ANGLE_INCLUDE_DIR" \
+  -DANGLE_LIB_DIR="$ANGLE_LIB_DIR"
+cmake --build samples/native/build --target opengl_es_31
+```
+
+For the moment, `opengl_es_31` is the non-Linux target that is wired into CI.
 
 ## Compile and run Erlang samples
 

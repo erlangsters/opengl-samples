@@ -50,3 +50,38 @@ jobs:
         run: sudo apt-get install -y libgles-dev
       - run: cmake -S samples/native -B samples/native/build
       - run: cmake --build samples/native/build --target ${{ matrix.target }} --parallel
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: angle
+        uses: erlangsters/setup-angle@v1
+      - run: vcpkg install --x-manifest-root=samples/native
+      - run: |
+          export ANGLE_INCLUDE_DIR="${{ steps.angle.outputs.angle-location }}/include"
+          export ANGLE_LIB_DIR="${{ steps.angle.outputs.angle-location }}/lib"
+          export CMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
+          cmake -S samples/native -B samples/native/build \
+            -DANGLE_INCLUDE_DIR="${ANGLE_INCLUDE_DIR}" \
+            -DANGLE_LIB_DIR="${ANGLE_LIB_DIR}" \
+            -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TOOLCHAIN_FILE}"
+      - run: cmake --build samples/native/build --target opengl_es_31 --parallel
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: angle
+        uses: erlangsters/setup-angle@v1
+      - run: vcpkg install --x-manifest-root=samples/native
+      - run: |
+          $angleLocation = "${{ steps.angle.outputs.angle-location }}"
+          $toolchain = "$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
+          cmake -S samples/native -B samples/native/build `
+            -DANGLE_INCLUDE_DIR="$angleLocation\include" `
+            -DANGLE_LIB_DIR="$angleLocation\lib" `
+            -DCMAKE_TOOLCHAIN_FILE="$toolchain"
+        shell: pwsh
+      - run: cmake --build samples/native/build --target opengl_es_31 --parallel
+        shell: pwsh

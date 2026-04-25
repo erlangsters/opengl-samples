@@ -7,7 +7,16 @@
 //
 // Written by Jonathan De Wachter <jonathan.dewachter@byteplug.io>
 //
-#define GLFW_EXPOSE_NATIVE_X11
+#if defined(_WIN32)
+    #define GLFW_EXPOSE_NATIVE_WIN32
+#elif defined(__APPLE__)
+    #define GLFW_EXPOSE_NATIVE_COCOA
+#elif defined(__linux__)
+    #define GLFW_EXPOSE_NATIVE_X11
+#else
+    #error "Unsupported platform."
+#endif
+
 #include <string.h>
 #include "gl_api.h"
 #include "window.h"
@@ -17,6 +26,17 @@
 #ifndef EGL_OPENGL_ES3_BIT
     #define EGL_OPENGL_ES3_BIT EGL_OPENGL_ES3_BIT_KHR
 #endif
+
+static EGLNativeWindowType get_native_window_handle(GLFWwindow* window)
+{
+#if defined(_WIN32)
+    return (EGLNativeWindowType)glfwGetWin32Window(window);
+#elif defined(__APPLE__)
+    return (EGLNativeWindowType)glfwGetCocoaWindow(window);
+#elif defined(__linux__)
+    return (EGLNativeWindowType)glfwGetX11Window(window);
+#endif
+}
 
 void window_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -124,7 +144,9 @@ int initializeWindow(
     // Set the GLFW window size callback to adjust the OpenGL viewport.
     glfwSetWindowSizeCallback(*window, window_size_callback);
 
-    *surface = eglCreateWindowSurface(*display, config, (EGLNativeWindowType)glfwGetX11Window(*window), NULL);
+    // GLFW gives us the platform-native window object, while EGL turns it into
+    // the presentation surface used by the samples.
+    *surface = eglCreateWindowSurface(*display, config, get_native_window_handle(*window), NULL);
     if (*surface == EGL_NO_SURFACE) {
         fprintf(stderr, "Failed to create EGL surface\n");
         glfwDestroyWindow(*window);
