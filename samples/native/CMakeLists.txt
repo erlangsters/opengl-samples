@@ -100,7 +100,11 @@ macro(add_native_samples_for_version group_target version_name version_macro api
         )
 
         target_include_directories(${target_name} PRIVATE ${COMMON_INCLUDE_DIRS})
-        target_compile_options(${target_name} PRIVATE -Wall -Wextra)
+        if(MSVC)
+            target_compile_options(${target_name} PRIVATE /W4)
+        else()
+            target_compile_options(${target_name} PRIVATE -Wall -Wextra)
+        endif()
         target_compile_definitions(${target_name} PRIVATE ${version_macro})
         set_target_properties(${target_name} PROPERTIES OUTPUT_NAME "${sample}-${version_name}")
 
