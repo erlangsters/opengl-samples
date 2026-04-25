@@ -128,8 +128,8 @@ int initializeWindow(
     }
 
     // Requesting an explicit GLES 3.x context through EGL depends on
-    // EGL_KHR_create_context on the Linux drivers we target today.
-    if (SAMPLE_OPENGL_API == SAMPLE_API_GLES && SAMPLE_OPENGL_VERSION_MAJOR >= 3) {
+    // EGL_KHR_create_context on the EGL implementations we target today.
+    #if SAMPLE_OPENGL_API == SAMPLE_API_GLES && SAMPLE_OPENGL_VERSION_MAJOR >= 3
         const char* egl_extensions = eglQueryString(*display, EGL_EXTENSIONS);
         if (!egl_extensions || strstr(egl_extensions, "EGL_KHR_create_context") == NULL) {
             fprintf(stderr, "EGL_KHR_create_context is required for OpenGL ES 3.x contexts\n");
@@ -139,7 +139,7 @@ int initializeWindow(
             eglTerminate(*display);
             return -1;
         }
-    }
+    #endif
 
     // Set the GLFW window size callback to adjust the OpenGL viewport.
     glfwSetWindowSizeCallback(*window, window_size_callback);

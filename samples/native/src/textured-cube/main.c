@@ -14,6 +14,9 @@
 #include "matrix.h"
 #include "window.h"
 
+#define CHECKER_TEXTURE_WIDTH 16
+#define CHECKER_TEXTURE_HEIGHT 16
+
 #if defined(OPENGL_VERSION_33)
 const char* vertexShaderSource =
     "#version 330 core\n"
@@ -316,12 +319,20 @@ int main() {
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    const int texWidth = 16;
-    const int texHeight = 16;
-    unsigned char textureData[texWidth * texHeight * 4];
-    generateCheckerTexture(textureData, texWidth, texHeight, 255, 0, 0, 128, 0, 0);
+    unsigned char textureData[CHECKER_TEXTURE_WIDTH * CHECKER_TEXTURE_HEIGHT * 4];
+    generateCheckerTexture(textureData, CHECKER_TEXTURE_WIDTH, CHECKER_TEXTURE_HEIGHT, 255, 0, 0, 128, 0, 0);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texWidth, texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGBA,
+        CHECKER_TEXTURE_WIDTH,
+        CHECKER_TEXTURE_HEIGHT,
+        0,
+        GL_RGBA,
+        GL_UNSIGNED_BYTE,
+        textureData
+    );
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
